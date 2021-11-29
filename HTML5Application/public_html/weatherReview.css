@@ -1,0 +1,146 @@
+.weather-review {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    position: relative;
+    min-height: 800px;
+    min-width: 1200px;
+}
+.weather-review .review-wrap {
+    width: 900px;
+    height: 100%;
+    background: none;
+    position: absolute;
+    top: 25%;
+    left: 25%;
+}
+.weather-review .review-wrap .selected-elements {
+    display: flex;
+    width: 900px;
+    background-color: white;
+    height: 120px;
+    border-radius: 10px;
+}
+.weather-review .review-wrap .selected-elements .weather-image {
+    height: 120px;
+    width: 100px;
+}
+.weather-review .review-wrap .selected-elements .weather-image img{
+    height: 80px;
+    width: 80px;
+    margin-top: 20px; 
+}
+.weather-review .review-wrap .selected-elements .country {
+    position: relative;
+    cursor: pointer;
+    margin-left: 20px;
+    margin-top: 45px;
+    height: 40px;
+    width: 80px;
+}
+.weather-review .review-wrap .selected-elements .country-code {
+    position: absolute;
+    top: 25%;
+}
+.weather-review .review-wrap .selected-elements .country-codes {
+    position: absolute;
+    margin-top: 35px;
+    width: 50px;
+}
+.weather-review .review-wrap .selected-elements .country-codes span:hover{
+    font-weight: bold;
+}
+.weather-review .review-wrap .selected-elements .search {
+    margin: 0;
+    width: 600px;
+    height: 40px;
+    margin-left: 20px;
+    margin-top: 45px;
+    position: relative;
+    display: inline-flex;
+    box-shadow: 0px 1px 3px -1px rgba(0, 0, 0, 0.1);
+}
+.weather-review .review-wrap .selected-elements .search .cities-list input::-webkit-calendar-picker-indicator {
+    display: none;
+}
+.weather-review .review-wrap .selected-elements .search .search-input {
+    height: 28px;
+    border-radius: 2px;
+    text-overflow: ellipsis;
+    width: 600px;
+    height: 40px;
+    border: 1px gray;
+    font-family: "Montserrat Light";
+    font-size: 18px;
+}
+.weather-review .review-wrap .selected-elements .search .search-image {
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding-top: 13px;
+    padding-left: 10px;
+}
+.weather-review .review-wrap .no-information {
+    padding-top: 50px;
+    color: white;
+    font-size: 30px;
+}
+.weather-review .review-wrap .date {
+    padding-top: 30px;
+}
+.weather-review .review-wrap .curr-temperature {
+    padding-top: 30px;
+    color: white;
+    position: relative;
+}
+.weather-review .review-wrap .curr-temperature .temperature {
+    font-size: 50px;
+    font-weight: bold;
+}
+.weather-review .review-wrap .curr-temperature .celsius {
+    position: absolute;
+    font-size: 10px;
+    padding-top: 10px;
+}
+.weather-review .review-wrap .weather-next-week{
+    display: flex;
+}
+.weather-review .review-wrap .weather-for-display{
+    width: 14%;
+}
+.weather-review .review-wrap .weather-for-display .date{
+    font-size: 13px;
+}
+.weather-review .review-wrap .weather-for-display .image{
+    height: 70px;
+    width: 70px;
+}
+.weather-review .review-wrap .weather-for-display .temperature{
+    font-size: 15px;
+    color: white;
+    font-weight: bold;
+}
+
+/*Loader*/
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+  margin: 100px 390px;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

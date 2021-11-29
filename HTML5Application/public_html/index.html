@@ -1,0 +1,275 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Weather review</title>
+        
+        <!-- This is a development version of Vue.js! -->
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <link rel="stylesheet" type="text/css" href="weatherReview.css?v=51">
+        <script src="https://kit.fontawesome.com/afd6aa68df.js" crossorigin="anonymous"></script>
+        <script src="filters/dateFormat.js"></script>
+        <script src="directives/clickOutside.js"></script>
+        <link rel="shortcut icon" href="#">
+    </head>
+    <body>
+        <div id="weather_review" class="weather-review" v-bind:style="background_style">
+            <div class="review-wrap">
+                <div class="selected-elements">
+                    <div class="weather-image">
+                        <image 
+                            v-if="first_shown_weather !== null"
+                            v-bind:src="'https://www.weatherbit.io/static/img/icons/' + first_shown_weather.weather.icon + '.png'"
+                            v-bind:title="first_shown_weather.weather.description"
+                        />
+                    </div>
+                    <div 
+                        v-on:click="show_countries = !show_countries" v-click-outside="unshowCountries"
+                        class="country"
+                    >
+                        <div class="country-code">
+                            <image v-bind:src="'https://flagcdn.com/16x12/' + cityCodeOwerCase(country_code) + '.png'"/>
+                            {{country_code}}
+                            <i class="fas fa-angle-down"></i>
+                        </div>
+                        <div class="country-codes" v-show="show_countries">
+                            <span 
+                                v-for="posible_country_code in posible_country_codes"
+                                v-on:click="country_code = posible_country_code"
+                            >
+                                <image v-bind:src="'https://flagcdn.com/16x12/' + cityCodeOwerCase(posible_country_code) + '.png'"/>
+                                {{posible_country_code}}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="search">
+                        <div class="cities-list">
+                            <input v-model="city" placeholder="Please enter your location..." class="search-input" list="cities"/>
+                            <datalist id="cities" class="">
+                                <option 
+                                    v-for="posible_city in posible_cities[country_code]"
+                                    v-bind:value="posible_city"
+                                >{{posible_city}}</option>
+                            </datalist>
+                        </div>
+                        <div class="search-image">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="first_shown_weather !== null">
+                    <div class="date">
+                        <span>
+                            {{first_shown_weather.datetime | dateFormat('month')}}
+                            {{first_shown_weather.datetime | dateFormat('date')}} 
+                            <template v-if="first_shown_date.getFullYear() !== last_shown_date.getFullYear()">
+                                {{first_shown_weather.datetime | dateFormat('year')}} 
+                            </template> - 
+                            <template v-if="first_shown_date.getMonth() !== last_shown_date.getMonth()">
+                                {{last_shown_weather.datetime | dateFormat('month')}}
+                            </template>
+                            {{last_shown_weather.datetime | dateFormat('date')}}
+                            {{last_shown_weather.datetime | dateFormat('year')}}
+                        </span>
+                    </div>
+                    <div class="curr-temperature">
+                        <span v-html="average_temperature" class="temperature"></span>
+                        <span class="celsius">°C</span>
+                    </div>
+                    <div class="weather-next-week">
+                        <div v-for="weather_for_display in weathers_for_display" class="weather-for-display">
+                            <div class="date">
+                                <span>
+                                    {{weather_for_display.datetime | dateFormat('day')}}
+                                </span>
+                            </div>
+                            <div>
+                                <image 
+                                    class="image"
+                                    v-bind:src="'https://www.weatherbit.io/static/img/icons/' + weather_for_display.weather.icon + '.png'"
+                                    v-bind:title="weather_for_display.weather.description"
+                                />
+                            </div>
+                            <div class="temperature">
+                                <span v-html="weather_for_display.temp" class="temperature"></span>
+                                <span class="celsius">°C</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-else-if="is_loader_on" class="loader"></div>
+                <div v-else class="no-information">
+                    No information
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+<script>
+    new Vue({el: '#weather_review',
+        data: function () {
+            return {
+                api_key: 'c0911f5f1afd4c3ba0a7b9b66e19b47f',
+                interval: '',
+                weather_list: [],
+                url: '',
+                city: '',
+                country_code: 'NL',
+                posible_country_codes: ['RS', 'US', 'NL', 'RU', 'EG'],
+                posible_cities: {
+                    'RS': ['Belgrade', 'Nis', 'Kragujevac', 'Novi Sad', 'Subotica'],
+                    'US': ['Chicago', 'Boston', 'Philadelphia', 'New York', 'Washington'],
+                    'NL': ['Amsterdam', 'Rotterdam', 'Utrecht', 'Almere', 'Bolsward'],
+                    'RU': ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Nizhny Novgorod'],
+                    'EG': ['Cairo', 'Alexandria', 'Giza', 'Suez', 'Port Said']
+                },
+                change_url_timeout: null,
+                weathers_for_display: [],
+                average_temperature: null,
+                gradient_r: 255,
+                gradient_g: 255,
+                gradient_b: 255,
+                background_alpha: 1,
+                show_countries: false,
+                is_loader_on: false
+            };
+        },
+        computed: {
+            //prosecna temperatura za narednih 10 dana i kreiranje niza vremena za prikaz narednih 7 dana
+            weathers_for_display_and_average: function() {
+                var temperature_sum = 0;
+                this.weathers_for_display = [];
+                for (let i = 0; i < this.weather_list.length; i++)
+                {
+                    temperature_sum += this.weather_list[i]['temp'];
+                    if(i < 7)
+                    {
+                        this.weathers_for_display.push(this.weather_list[i]);
+                    }
+                    if (i === 9)
+                    {
+                        break;
+                    }
+                }
+
+                if(this.weathers_for_display.length > 0)
+                {
+                    var average_temperature = temperature_sum / 10;
+                    this.average_temperature = average_temperature.toFixed(0);
+                }
+                else
+                {
+                    this.average_temperature = null;
+                }
+            },
+            first_shown_weather: function() {
+                return (this.weathers_for_display.length === 7) ? this.weathers_for_display[0] : null;
+            },
+            first_shown_date: function() {
+                return (this.first_shown_weather !== null) ? new Date(this.first_shown_weather.datetime) : null;
+            },
+            last_shown_weather: function() {
+                return (this.weathers_for_display.length === 7) ? this.weathers_for_display[6] : null;
+            },
+            last_shown_date: function() {
+                return (this.last_shown_weather !== null) ? new Date(this.last_shown_weather.datetime) : null;
+            },
+            background_rgb: function() {
+                if(this.average_temperature === null) //bela ukoliko nije odabran grad
+                {
+                    this.gradient_r = 255;
+                    this.gradient_g = 255;
+                    this.gradient_b = 255;
+                    this.background_alpha = 1;
+                }
+                else if(this.average_temperature < 0) //tamno plava sa slabljenjem ka nuli
+                {
+                    this.gradient_r = 0;
+                    this.gradient_g = 0;
+                    this.gradient_b = 255;
+                    this.background_alpha = Math.abs(this.average_temperature / 40);
+                }
+                else if(this.average_temperature >= 0 && this.average_temperature < 20) //zuta, koja se povecava sa porastom temperature
+                {
+                    this.gradient_r = 255;
+                    this.gradient_g = 255;
+                    this.gradient_b = 0;
+                    this.background_alpha = this.average_temperature / 20;
+                }
+                else //narandzasta, koja se povecava sa porastom temperature
+                {
+                    this.gradient_r = 255;
+                    this.gradient_g = 165;
+                    this.gradient_b = 0;
+                    this.background_alpha = this.average_temperature / 40;
+                }
+            },
+            background_style: function() {
+                return {
+                    'background-image': 'linear-gradient(to top left, rgba(' + 
+                        this.gradient_r + ',' + this.gradient_g + ',' + this.gradient_b + ',' + this.background_alpha + '), rgba(173,216,230))'
+                };
+            }
+        },
+        watch: {
+            url: function() {
+                this.setWeatherList();
+            },
+            city: function() {
+                var _this = this;
+                if (this.change_url_timeout !== null)
+                {
+                    clearTimeout(this.change_url_timeout);
+                }
+
+                this.change_url_timeout = setTimeout(function() {
+                    _this.setURL();
+                }, 500); //u slucaju da se brzo kuca tekst pri pretrazi u input-u
+            },
+            country_code: function() {
+                this.city = '';
+            },
+            weathers_for_display_and_average: function() {},
+            background_rgb: function() {}
+        },
+        mounted: function() {
+            this.setURL();
+            this.periodicalSetWeatherList();
+        },
+        methods: {
+            setURL: function() {
+                this.url = this.posible_cities[this.country_code].includes(this.city) ?
+                    (
+                        'https://api.weatherbit.io/v2.0/forecast/daily?city=' + 
+                        this.city + ',' + 
+                        this.country_code + '&key=' +
+                        this.api_key
+                    ) : '';
+            },
+            periodicalSetWeatherList: function() {
+                var _this = this;
+                this.interval = setInterval(function(){
+                    _this.setWeatherList();
+                }.bind(this), 24*60*60*1000); //dohvatanje podataka svakog narednog dana
+            },
+            setWeatherList: async function() {
+                if(this.url === '')
+                {
+                    this.weather_list = [];
+                    return;
+                }
+                this.is_loader_on = true;
+                var response = await fetch(this.url);
+                var response_json = await response.json();
+                this.weather_list = response_json.data;
+                this.is_loader_on = false;
+            },
+            cityCodeOwerCase: function(code){
+                return code.toLowerCase();
+            },
+            unshowCountries: function() {
+                this.show_countries = false;
+            }
+        }
+    });
+</script>
